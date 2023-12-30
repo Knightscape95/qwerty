@@ -1,0 +1,62 @@
+---
+- hosts: all  # Target all hosts defined in the inventory
+  become: yes  # Elevate privileges for tasks requiring root access
+  tasks:
+    - name: Install necessary packages
+      package:
+        name:
+          - python3-pip  # For Ansible
+          - docker  # For Docker container management
+          - mysql-client  # For MySQL interaction
+
+    - name: Create directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /path/to/application/files
+        - /path/to/mysql_data
+
+    - name: Copy application files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - { src: 'file1.txt', dest: '/path/to/application/files/' }
+        - { src: 'file2.yaml', dest: '/path/to/application/files/' }
+
+    - name: Deploy the application (if applicable)
+      # Add tasks for application deployment here, if needed
+      # Example using a shell script:
+      shell: /path/to/deploy_application.sh
+
+    - name: Pull Docker image
+      docker_image:
+        name: doc
+        source: pull
+
+    - name: Create and start Docker containers
+      docker_container:
+        name: my-app-container
+        image: doc
+        ports:
+          - "80:80"
+          - "3306:3306"
+        volumes:
+          - /path/on/host/mysql_data:/var/lib/mysql
+        environment:
+          MYSQL_ROOT_PASSWORD: your_root_password
+          MYSQL_DATABASE: your_database_name
+          MYSQL_USER: your_database_user
+          MYSQL_PASSWORD: your_database_password
+        state: started
+
+    - name: Install MySQL package
+      package:
+        name: qwerty
+        state: present
+
+    - name: Start MySQL service
+      service:
+        name: mysql
+        state: started
